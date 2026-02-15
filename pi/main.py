@@ -9,15 +9,24 @@ from ui.idle_screen import IdleScreen
 from ui.menu import Menu
 from ui.spotify_screen import SpotifyScreen
 from ui.visualiser import Visualiser
+from ui.effects_screen import EffectsScreen
+from ui.effect_chain_screen import EffectChainScreen
+from ui.tuner import TunerScreen
+from ui.presets_screen import PresetsScreen
 from comms.spotify_client import SpotifyClient
 from comms.mock_signal import MockSignal
 from effects.effect_chain import EffectChain
+from effects import Overdrive, Fuzz, Chorus, Delay, Reverb
 
 # App states - these control which screen is currently being displayed
 STATE_IDLE = "idle"             # Idle animation with waveforms
 STATE_MENU = "menu"             # Main menu with options
 STATE_SPOTIFY = "spotify"       # Spotify now playing screen
 STATE_VISUALISER = "visualiser" # Signal visualiser screen
+STATE_EFFECTS = "effects"       # Individual effect editing screen
+STATE_CHAIN = "effect_chain"    # Effect chain order screen
+STATE_TUNER = "tuner"           # Chromatic tuner screen
+STATE_PRESETS = "presets"       # Preset browser screen
 
 
 def main():
@@ -36,12 +45,24 @@ def main():
     mock_signal = MockSignal()          # Generates a test sine wave
     effect_chain = EffectChain()        # Passthrough for now, effects added later
 
+    # Create effect instances and add to chain
+    overdrive = Overdrive()
+    fuzz = Fuzz()
+    chorus = Chorus()
+    delay = Delay()
+    reverb = Reverb()
+    effect_chain.effects = [overdrive, fuzz, chorus, delay, reverb]
+
     # Create all our screen objects
     idle = IdleScreen(screen)               # The idle animation screen
     menu = Menu(screen)                     # The main menu screen
     spotify_client = SpotifyClient()        # Handles Spotify API communication
     spotify_screen = SpotifyScreen(screen, spotify_client)  # Spotify UI screen
     visualiser = Visualiser(screen, mock_signal, effect_chain)  # Signal visualiser
+    effects_screen = EffectsScreen(screen, effect_chain)        # Effect parameter editor
+    chain_screen = EffectChainScreen(screen, effect_chain)      # Effect chain reorder
+    tuner_screen = TunerScreen(screen, mock_signal)             # Chromatic tuner
+    presets_screen = PresetsScreen(screen, effect_chain)        # Preset browser
 
     # Start on the idle screen
     state = STATE_IDLE
@@ -60,7 +81,9 @@ def main():
 
             # Escape key - go back to idle, or exit if already on idle
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                if state in (STATE_MENU, STATE_SPOTIFY, STATE_VISUALISER):
+                if state in (STATE_MENU, STATE_SPOTIFY, STATE_VISUALISER,
+                             STATE_EFFECTS, STATE_CHAIN, STATE_TUNER,
+                             STATE_PRESETS):
                     state = STATE_IDLE
                 else:
                     running = False
@@ -79,6 +102,17 @@ def main():
                     state = STATE_SPOTIFY   # Open Spotify screen
                 elif selection == "Visualiser":
                     state = STATE_VISUALISER  # Open visualiser screen
+                elif selection == "Effects":
+                    state = STATE_EFFECTS     # Open effects editor
+                    effects_screen.view = 'list'  # Always start on list view
+                elif selection == "Effect Chain":
+                    state = STATE_CHAIN       # Open effect chain screen
+                elif selection == "Tuner":
+                    state = STATE_TUNER       # Open chromatic tuner
+                elif selection == "Presets":
+                    state = STATE_PRESETS    # Open preset browser
+                    presets_screen.refresh_presets()
+                    presets_screen.view = 'list'
                 elif selection == "Exit":
                     running = False         # Close the app
                 elif selection:
@@ -99,6 +133,30 @@ def main():
                     state = STATE_MENU      # Go back to the menu
                     menu.selected = None
 
+            elif state == STATE_EFFECTS:
+                result = effects_screen.handle_event(event)
+                if result == "back":
+                    state = STATE_MENU
+                    menu.selected = None
+
+            elif state == STATE_CHAIN:
+                result = chain_screen.handle_event(event)
+                if result == "back":
+                    state = STATE_MENU
+                    menu.selected = None
+
+            elif state == STATE_TUNER:
+                result = tuner_screen.handle_event(event)
+                if result == "back":
+                    state = STATE_MENU
+                    menu.selected = None
+
+            elif state == STATE_PRESETS:
+                result = presets_screen.handle_event(event)
+                if result == "back":
+                    state = STATE_MENU
+                    menu.selected = None
+
         # Draw the current screen
         if state == STATE_IDLE:
             idle.draw(dt)
@@ -108,6 +166,14 @@ def main():
             spotify_screen.draw(dt)
         elif state == STATE_VISUALISER:
             visualiser.draw(dt)
+        elif state == STATE_EFFECTS:
+            effects_screen.draw(dt)
+        elif state == STATE_CHAIN:
+            chain_screen.draw(dt)
+        elif state == STATE_TUNER:
+            tuner_screen.draw(dt)
+        elif state == STATE_PRESETS:
+            presets_screen.draw(dt)
 
         # Update the display with everything we just drew
         pygame.display.flip()

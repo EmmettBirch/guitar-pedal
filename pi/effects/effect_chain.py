@@ -1,3 +1,5 @@
+import numpy as np
+
 # effect_chain.py - Processes audio samples through an ordered list of effects.
 # Currently a passthrough skeleton — effects will be added later.
 #
@@ -28,4 +30,4 @@ class EffectChain:
         for effect in self.effects:
             if effect.enabled:
                 samples = effect.process(samples)
-        return samples
+        return np.clip(samples, -1.0, 1.0)

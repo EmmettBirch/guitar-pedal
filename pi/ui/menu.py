@@ -26,7 +26,6 @@ class Menu:
             {'label': 'Tuner', 'icon': '#'},
             {'label': 'Presets', 'icon': '*'},
             {'label': 'Visualiser', 'icon': '|'},
-            {'label': 'MIDI', 'icon': '>'},
             {'label': 'Spotify', 'icon': 'S'},
             {'label': 'Exit', 'icon': 'X'},
         ]
