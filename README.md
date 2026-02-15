@@ -15,14 +15,15 @@ A digital guitar effects pedal built with a Raspberry Pi 4 and an Electrosmith D
 - **Idle Screen** - Animated waveform display with floating particles and pulsing title
 - **Touch Menu** - Scrollable menu with tap selection
 - **Spotify Integration** - Now playing screen with album art, track info, progress bar, and playback controls (play/pause, skip, previous)
+- **Visualiser** - Split-screen oscilloscope showing input signal (blue) and effect chain output (green) as real-time waveforms
+- **Mock Signal** - 440Hz sine wave generator for testing without Daisy hardware
+- **Effect Chain** - Passthrough skeleton that effects will plug into
 - **Auto-start** - App launches automatically on boot
 
 ### Planned
 - **Effects** - Select and configure individual effects (overdrive, delay, reverb, chorus, fuzz)
-- **Effect Chain** - Chain multiple effects together in series
 - **Tuner** - Built-in chromatic guitar tuner
 - **Presets** - Save and load effect configurations
-- **Visualiser** - Real-time signal waveform/spectrum display
 - **MIDI Support** - Control effects via MIDI foot controller
 
 ## Project Structure
@@ -37,13 +38,15 @@ guitar-pedal/
 │   │   ├── idle_screen.py       # Idle waveform animation
 │   │   ├── menu.py              # Main menu with touch support
 │   │   ├── spotify_screen.py    # Spotify now playing screen
+│   │   ├── visualiser.py        # Split-screen signal oscilloscope
 │   │   ├── tuner.py             # Tuner display (planned)
-│   │   ├── visualiser.py        # Signal visualiser (planned)
 │   │   └── parameter_control.py # Effect parameter UI (planned)
 │   ├── effects/
+│   │   ├── effect_chain.py      # Ordered effect processing pipeline
 │   │   └── presets.py           # Preset save/load (planned)
 │   ├── comms/
 │   │   ├── spotify_client.py    # Spotify API client
+│   │   ├── mock_signal.py       # Fake signal source for testing
 │   │   └── serial_comms.py      # Pi <-> Daisy communication (planned)
 │   └── assets/                  # Animations, icons, fonts
 ├── daisy/                       # C++ - Electrosmith Daisy DSP
@@ -70,7 +73,7 @@ guitar-pedal/
 ### Prerequisites
 - Raspberry Pi 4 with Raspberry Pi OS (64-bit)
 - MHS35 LCD display with drivers installed
-- Python 3 with pygame, spotipy, python-dotenv, requests, Pillow
+- Python 3 with pygame, numpy, spotipy, python-dotenv, requests, Pillow
 
 ### Installation
 
@@ -82,7 +85,7 @@ guitar-pedal/
 
 2. Install Python dependencies:
    ```
-   pip3 install pygame spotipy python-dotenv requests Pillow
+   pip3 install pygame numpy spotipy python-dotenv requests Pillow
    ```
 
 3. Create a `.env` file in the `pi/` directory:
@@ -109,7 +112,7 @@ The app is configured to auto-start via `~/.config/autostart/guitar-pedal.deskto
 
 ## Tech Stack
 
-- **Pi UI**: Python, pygame
+- **Pi UI**: Python, pygame, numpy
 - **Audio DSP**: C++, Electrosmith Daisy SDK
 - **Communication**: Serial over USB (Pi <-> Daisy)
 - **Spotify**: spotipy (Spotify Web API)

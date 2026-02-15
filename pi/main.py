@@ -8,12 +8,16 @@ import sys
 from ui.idle_screen import IdleScreen
 from ui.menu import Menu
 from ui.spotify_screen import SpotifyScreen
+from ui.visualiser import Visualiser
 from comms.spotify_client import SpotifyClient
+from comms.mock_signal import MockSignal
+from effects.effect_chain import EffectChain
 
 # App states - these control which screen is currently being displayed
-STATE_IDLE = "idle"         # Idle animation with waveforms
-STATE_MENU = "menu"         # Main menu with options
-STATE_SPOTIFY = "spotify"   # Spotify now playing screen
+STATE_IDLE = "idle"             # Idle animation with waveforms
+STATE_MENU = "menu"             # Main menu with options
+STATE_SPOTIFY = "spotify"       # Spotify now playing screen
+STATE_VISUALISER = "visualiser" # Signal visualiser screen
 
 
 def main():
@@ -28,11 +32,16 @@ def main():
     # Clock controls the frame rate (60 FPS)
     clock = pygame.time.Clock()
 
+    # Create shared signal and effect chain instances
+    mock_signal = MockSignal()          # Generates a test sine wave
+    effect_chain = EffectChain()        # Passthrough for now, effects added later
+
     # Create all our screen objects
     idle = IdleScreen(screen)               # The idle animation screen
     menu = Menu(screen)                     # The main menu screen
     spotify_client = SpotifyClient()        # Handles Spotify API communication
     spotify_screen = SpotifyScreen(screen, spotify_client)  # Spotify UI screen
+    visualiser = Visualiser(screen, mock_signal, effect_chain)  # Signal visualiser
 
     # Start on the idle screen
     state = STATE_IDLE
@@ -51,7 +60,7 @@ def main():
 
             # Escape key - go back to idle, or exit if already on idle
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                if state in (STATE_MENU, STATE_SPOTIFY):
+                if state in (STATE_MENU, STATE_SPOTIFY, STATE_VISUALISER):
                     state = STATE_IDLE
                 else:
                     running = False
@@ -68,6 +77,8 @@ def main():
                 selection = menu.handle_event(event)
                 if selection == "Spotify":
                     state = STATE_SPOTIFY   # Open Spotify screen
+                elif selection == "Visualiser":
+                    state = STATE_VISUALISER  # Open visualiser screen
                 elif selection == "Exit":
                     running = False         # Close the app
                 elif selection:
@@ -81,6 +92,13 @@ def main():
                     state = STATE_MENU      # Go back to the menu
                     menu.selected = None
 
+            elif state == STATE_VISUALISER:
+                # Pass the event to the visualiser screen
+                result = visualiser.handle_event(event)
+                if result == "back":
+                    state = STATE_MENU      # Go back to the menu
+                    menu.selected = None
+
         # Draw the current screen
         if state == STATE_IDLE:
             idle.draw(dt)
@@ -88,6 +106,8 @@ def main():
             menu.draw(dt)
         elif state == STATE_SPOTIFY:
             spotify_screen.draw(dt)
+        elif state == STATE_VISUALISER:
+            visualiser.draw(dt)
 
         # Update the display with everything we just drew
         pygame.display.flip()
