@@ -6,6 +6,7 @@ import pygame
 import math
 import random
 import time
+from datetime import date
 
 
 class IdleScreen:
@@ -80,23 +81,36 @@ class IdleScreen:
             pygame.draw.circle(self.screen, color, (int(p['x']), int(p['y'])), int(p['size']))
 
     def _draw_title(self):
-        """Draw the pulsing 'GUITAR PEDAL' title and 'ready' subtitle in the center."""
+        """Draw the pulsing title and personal info in the center of the screen."""
         # Pulse effect - smoothly fades between 70% and 100% brightness
         pulse = 0.7 + 0.3 * math.sin(self.time * 0.8)
         alpha = int(200 * pulse)
 
-        # Main title
-        font = pygame.font.SysFont('monospace', 42, bold=True)
-        text = font.render('GUITAR PEDAL', True, (alpha, alpha, alpha))
-        rect = text.get_rect(center=(self.width // 2, self.height // 2))
-        self.screen.blit(text, rect)
+        cx = self.width // 2
+        cy = self.height // 2
 
-        # "ready" subtitle in cyan, also pulsing
-        sub_font = pygame.font.SysFont('monospace', 18)
-        sub_alpha = int(120 * pulse)
-        sub_text = sub_font.render('ready', True, (0, sub_alpha, sub_alpha))
-        sub_rect = sub_text.get_rect(center=(self.width // 2, self.height // 2 + 40))
-        self.screen.blit(sub_text, sub_rect)
+        # Main title
+        title_font = pygame.font.SysFont('monospace', 42, bold=True)
+        title_text = title_font.render('GUITAR PEDAL', True, (alpha, alpha, alpha))
+        title_rect = title_text.get_rect(center=(cx, cy - 60))
+        self.screen.blit(title_text, title_rect)
+
+        # Personal info lines
+        info_font = pygame.font.SysFont('monospace', 18)
+        sub_alpha = int(160 * pulse)
+        cyan = (0, sub_alpha, sub_alpha)
+
+        info_lines = [
+            'Emmett Birch',
+            'GitHub: QueenEm  |  edX: emmettbirch',
+            'Sheffield, England',
+            date.today().isoformat(),
+        ]
+
+        for i, line in enumerate(info_lines):
+            info_text = info_font.render(line, True, cyan)
+            info_rect = info_text.get_rect(center=(cx, cy + 10 + i * 28))
+            self.screen.blit(info_text, info_rect)
 
     def draw(self, dt):
         """Draw one frame of the idle animation. Called 60 times per second.

@@ -1,0 +1,7 @@
+pygame
+numpy
+spotipy
+python-dotenv
+requests
+Pillow
+pytest
