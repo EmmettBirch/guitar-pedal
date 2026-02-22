@@ -1,5 +1,5 @@
 # test_project.py - Tests for the Guitar Pedal project
-# CS50P Final Project - Emmett Birch (QueenEm)
+# CS50P Final Project - Emmett Birch (EmmettBirch)
 
 import json
 import numpy as np

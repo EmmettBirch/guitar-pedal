@@ -2,7 +2,7 @@
 # built with a Raspberry Pi 4 and an Electrosmith Daisy.
 #
 # CS50P Final Project
-# Emmett Birch (QueenEm)
+# Emmett Birch (EmmettBirch)
 
 import sys
 import os
