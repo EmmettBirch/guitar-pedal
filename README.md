@@ -1,6 +1,6 @@
 # Guitar Pedal
 
-#### Video Demo: <URL HERE>
+#### Video Demo: https://www.youtube.com/watch?v=wJjhRx7qGRw
 
 #### Description:
 
@@ -110,7 +110,7 @@ The following standalone functions are defined in `project.py` and tested in `te
 
 1. Clone the repo:
    ```
-   git clone git@github.com:QueenEM/guitar-pedal.git
+   git clone https://github.com/EmmettBirch/guitar-pedal.git
    cd guitar-pedal
    ```
 
