@@ -8,6 +8,8 @@ import threading
 import requests
 import io
 
+from hardware.encoders import ENC1_CLICK, ENC2_CLICK
+
 
 class SpotifyScreen:
     def __init__(self, screen, spotify_client):
@@ -225,11 +227,20 @@ class SpotifyScreen:
         return (dx * dx + dy * dy) <= (radius * radius)
 
     def handle_event(self, event):
-        """Handle touch events on the Spotify screen.
+        """Handle touch and encoder events on the Spotify screen.
 
         Returns "back" if the back button was tapped, otherwise None.
         Playback controls (prev/play/next) are handled directly via the Spotify API.
+        ENC1 click: play/pause. ENC2 click: back.
         """
+        if event.type == ENC2_CLICK:
+            return "back"
+
+        if event.type == ENC1_CLICK:
+            if self.spotify.authenticated:
+                threading.Thread(target=self.spotify.play_pause, daemon=True).start()
+            return None
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = event.pos
 

@@ -11,6 +11,7 @@ A digital guitar effects pedal built with a Raspberry Pi 4 and an Electrosmith D
 - Raspberry Pi 4 (4GB)
 - Electrosmith Daisy (audio DSP)
 - MHS35 3.5" GPIO touchscreen (480x320)
+- 2x Rotary encoders with push buttons
 - USB to SATA adapter (for SSD boot, optional)
 
 ## Features
@@ -23,6 +24,7 @@ A digital guitar effects pedal built with a Raspberry Pi 4 and an Electrosmith D
 - **Tuner** - Built-in chromatic guitar tuner with real-time autocorrelation pitch detection
 - **Presets** - Browse and apply factory presets (Rock, Metal, Hip-Hop), save/load/delete custom user presets with on-screen keyboard, persisted to disk as JSON
 - **Spotify Integration** - Now playing screen with album art, track info, progress bar, and playback controls (play/pause, skip, previous)
+- **Encoder Test** - Live GPIO test screen for rotary encoders; shows rotation direction, click events, and a running count per encoder
 - **Visualiser** - Split-screen oscilloscope showing input signal (blue) and effect chain output (green) as real-time waveforms
 - **Mock Signal** - 440Hz sine wave generator for testing without Daisy hardware
 - **Auto-start** - App launches automatically on boot
@@ -43,6 +45,8 @@ guitar-pedal/
 │   ├── main.py                  # App entry point (used by auto-start)
 │   ├── .env                     # Spotify credentials (not in git)
 │   ├── spotify_auth.py          # Spotify login helper script
+│   ├── hardware/
+│   │   └── encoders.py          # Rotary encoder GPIO input (posts pygame events)
 │   ├── ui/
 │   │   ├── idle_screen.py       # Idle waveform animation with personal info
 │   │   ├── menu.py              # Main menu with touch support
@@ -51,6 +55,7 @@ guitar-pedal/
 │   │   ├── presets_screen.py    # Preset browser, save, and delete
 │   │   ├── tuner.py             # Chromatic guitar tuner
 │   │   ├── spotify_screen.py    # Spotify now playing screen
+│   │   ├── encoder_test_screen.py # GPIO encoder test screen
 │   │   └── visualiser.py        # Split-screen signal oscilloscope
 │   ├── effects/
 │   │   ├── effect_chain.py      # Ordered effect processing pipeline
@@ -110,7 +115,7 @@ The following standalone functions are defined in `project.py` and tested in `te
 
 1. Clone the repo:
    ```
-   git clone https://github.com/EmmettBirch/guitar-pedal.git
+   git clone git@github.com:QueenEM/guitar-pedal.git
    cd guitar-pedal
    ```
 
@@ -134,8 +139,7 @@ The following standalone functions are defined in `project.py` and tested in `te
 
 5. Run the app:
    ```
-   cd pi
-   DISPLAY=:0 python3 main.py
+   DISPLAY=:0 python3 project.py
    ```
 
 ### Running Tests
@@ -147,6 +151,13 @@ pytest test_project.py
 
 ### Auto-start on Boot
 The app is configured to auto-start via `~/.config/autostart/guitar-pedal.desktop`.
+A desktop shortcut (`~/Desktop/guitar-pedal.desktop`) is also available.
+
+### Encoder GPIO Wiring
+| | CLK | DT | SW (click) |
+|---|---|---|---|
+| ENC1 (navigation) | GPIO 5 | GPIO 6 | GPIO 13 |
+| ENC2 (value) | GPIO 19 | GPIO 26 | GPIO 16 |
 
 ## Tech Stack
 

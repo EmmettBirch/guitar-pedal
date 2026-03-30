@@ -4,6 +4,8 @@
 
 import pygame
 
+from hardware.encoders import ENC1_ROTATE, ENC1_CLICK, ENC2_CLICK
+
 
 class EffectChainScreen:
     def __init__(self, screen, effect_chain):
@@ -38,6 +40,9 @@ class EffectChainScreen:
 
         # Back button
         self.btn_back = pygame.Rect(5, 5, 50, 32)
+
+        # Encoder cursor
+        self.cursor = 0
 
     def _row_y(self, index):
         return self.header_height + self.row_gap + index * (self.row_height + self.row_gap)
@@ -89,6 +94,8 @@ class EffectChainScreen:
             card_rect = pygame.Rect(self.row_gap, y,
                                     self.width - self.row_gap * 2, self.row_height)
             pygame.draw.rect(self.screen, bg, card_rect, border_radius=6)
+            if i == self.cursor:
+                pygame.draw.rect(self.screen, self.blue, card_rect, 2, border_radius=6)
 
             cy = y + self.row_height // 2
 
@@ -122,7 +129,21 @@ class EffectChainScreen:
             self.screen.blit(tog_txt, tog_txt.get_rect(center=tog_rect.center))
 
     def handle_event(self, event):
-        """Handle touch events. Returns 'back' or None."""
+        """Handle touch and encoder events. Returns 'back' or None."""
+        if event.type == ENC1_ROTATE:
+            n = len(self.chain.effects)
+            self.cursor = max(0, min(n - 1, self.cursor + event.delta))
+            return None
+
+        if event.type == ENC1_CLICK:
+            effects = self.chain.effects
+            if 0 <= self.cursor < len(effects):
+                effects[self.cursor].enabled = not effects[self.cursor].enabled
+            return None
+
+        if event.type == ENC2_CLICK:
+            return "back"
+
         if event.type != pygame.MOUSEBUTTONDOWN:
             return None
 

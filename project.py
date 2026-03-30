@@ -2,7 +2,7 @@
 # built with a Raspberry Pi 4 and an Electrosmith Daisy.
 #
 # CS50P Final Project
-# Emmett Birch (EmmettBirch)
+# Emmett Birch (QueenEm)
 
 import sys
 import os
@@ -42,6 +42,7 @@ def main():
     from ui.effect_chain_screen import EffectChainScreen
     from ui.tuner import TunerScreen
     from ui.presets_screen import PresetsScreen
+    from ui.encoder_test_screen import EncoderTestScreen
     from comms.spotify_client import SpotifyClient
     from comms.mock_signal import MockSignal
     from effects.effect_chain import EffectChain
@@ -56,6 +57,7 @@ def main():
     STATE_CHAIN = "effect_chain"
     STATE_TUNER = "tuner"
     STATE_PRESETS = "presets"
+    STATE_ENC_TEST = "enc_test"
 
     # Initialise pygame and create a fullscreen display
     pygame.init()
@@ -86,8 +88,9 @@ def main():
     chain_screen = EffectChainScreen(screen, effect_chain)
     tuner_screen = TunerScreen(screen, mock_signal)
     presets_screen = PresetsScreen(screen, effect_chain)
+    enc_test_screen = EncoderTestScreen(screen)
 
-    # Start on the idle screen
+    # Start on the encoder test screen
     state = STATE_IDLE
     running = True
 
@@ -134,6 +137,8 @@ def main():
                     state = STATE_PRESETS
                     presets_screen.refresh_presets()
                     presets_screen.view = 'list'
+                elif selection == "Enc Test":
+                    state = STATE_ENC_TEST
                 elif selection == "Exit":
                     running = False
 
@@ -167,6 +172,12 @@ def main():
                     state = STATE_MENU
                     menu.selected = None
 
+            elif state == STATE_ENC_TEST:
+                result = enc_test_screen.handle_event(event)
+                if result == "back":
+                    state = STATE_MENU
+                    menu.selected = None
+
             elif state == STATE_PRESETS:
                 result = presets_screen.handle_event(event)
                 if result == "back":
@@ -188,6 +199,8 @@ def main():
             chain_screen.draw(dt)
         elif state == STATE_TUNER:
             tuner_screen.draw(dt)
+        elif state == STATE_ENC_TEST:
+            enc_test_screen.draw(dt)
         elif state == STATE_PRESETS:
             presets_screen.draw(dt)
 

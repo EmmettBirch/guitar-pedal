@@ -5,6 +5,7 @@
 import pygame
 import sys
 
+from hardware.encoders import setup_encoders, ENC1_CLICK
 from ui.idle_screen import IdleScreen
 from ui.menu import Menu
 from ui.spotify_screen import SpotifyScreen
@@ -13,6 +14,7 @@ from ui.effects_screen import EffectsScreen
 from ui.effect_chain_screen import EffectChainScreen
 from ui.tuner import TunerScreen
 from ui.presets_screen import PresetsScreen
+from ui.encoder_test_screen import EncoderTestScreen
 from comms.spotify_client import SpotifyClient
 from comms.mock_signal import MockSignal
 from effects.effect_chain import EffectChain
@@ -26,7 +28,8 @@ STATE_VISUALISER = "visualiser" # Signal visualiser screen
 STATE_EFFECTS = "effects"       # Individual effect editing screen
 STATE_CHAIN = "effect_chain"    # Effect chain order screen
 STATE_TUNER = "tuner"           # Chromatic tuner screen
-STATE_PRESETS = "presets"       # Preset browser screen
+STATE_PRESETS = "presets"
+STATE_ENC_TEST = "enc_test"       # Preset browser screen
 
 
 def main():
@@ -40,6 +43,9 @@ def main():
 
     # Clock controls the frame rate (60 FPS)
     clock = pygame.time.Clock()
+
+    # Set up rotary encoders (no-op on non-Pi hardware)
+    _encoders = setup_encoders()
 
     # Create shared signal and effect chain instances
     mock_signal = MockSignal()          # Generates a test sine wave
@@ -62,10 +68,11 @@ def main():
     effects_screen = EffectsScreen(screen, effect_chain)        # Effect parameter editor
     chain_screen = EffectChainScreen(screen, effect_chain)      # Effect chain reorder
     tuner_screen = TunerScreen(screen, mock_signal)             # Chromatic tuner
-    presets_screen = PresetsScreen(screen, effect_chain)        # Preset browser
+    presets_screen = PresetsScreen(screen, effect_chain)
+    enc_test_screen = EncoderTestScreen(screen)        # Preset browser
 
-    # Start on the idle screen
-    state = STATE_IDLE
+    # Start on the encoder test screen
+    state = STATE_ENC_TEST
 
     # Main game loop - runs 60 times per second until we exit
     running = True
@@ -90,15 +97,17 @@ def main():
 
             # Handle events based on which screen we're on
             if state == STATE_IDLE:
-                # Tap anywhere on the idle screen to open the menu
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                # Tap anywhere (or press enc1) to open the menu
+                if event.type == pygame.MOUSEBUTTONDOWN or event.type == ENC1_CLICK:
                     state = STATE_MENU
                     menu.selected = None    # Reset menu selection
 
             elif state == STATE_MENU:
                 # Pass the event to the menu and check if something was selected
                 selection = menu.handle_event(event)
-                if selection == "Spotify":
+                if selection == "back":
+                    state = STATE_IDLE
+                elif selection == "Spotify":
                     state = STATE_SPOTIFY   # Open Spotify screen
                 elif selection == "Visualiser":
                     state = STATE_VISUALISER  # Open visualiser screen
@@ -113,6 +122,8 @@ def main():
                     state = STATE_PRESETS    # Open preset browser
                     presets_screen.refresh_presets()
                     presets_screen.view = 'list'
+                elif selection == "Enc Test":
+                    state = STATE_ENC_TEST
                 elif selection == "Exit":
                     running = False         # Close the app
                 elif selection:
@@ -151,6 +162,12 @@ def main():
                     state = STATE_MENU
                     menu.selected = None
 
+            elif state == STATE_ENC_TEST:
+                result = enc_test_screen.handle_event(event)
+                if result == "back":
+                    state = STATE_MENU
+                    menu.selected = None
+
             elif state == STATE_PRESETS:
                 result = presets_screen.handle_event(event)
                 if result == "back":
@@ -172,6 +189,8 @@ def main():
             chain_screen.draw(dt)
         elif state == STATE_TUNER:
             tuner_screen.draw(dt)
+        elif state == STATE_ENC_TEST:
+            enc_test_screen.draw(dt)
         elif state == STATE_PRESETS:
             presets_screen.draw(dt)
 

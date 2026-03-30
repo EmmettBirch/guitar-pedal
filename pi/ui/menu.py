@@ -5,6 +5,8 @@
 import pygame
 import math
 
+from hardware.encoders import ENC1_ROTATE, ENC1_CLICK, ENC2_CLICK
+
 
 class Menu:
     def __init__(self, screen):
@@ -21,6 +23,8 @@ class Menu:
 
         # Each menu item has a label (display text) and an icon (single character)
         self.items = [
+            {'label': 'Enc Test', 'icon': 'E'},
+            {'label': 'Enc Test', 'icon': 'E'},
             {'label': 'Effects', 'icon': '~'},
             {'label': 'Effect Chain', 'icon': '+'},
             {'label': 'Tuner', 'icon': '#'},
@@ -94,14 +98,45 @@ class Menu:
         arrow_rect = arrow.get_rect(midright=(rect.right - 15, rect.centery))
         self.screen.blit(arrow, arrow_rect)
 
+    def _ensure_visible(self, index):
+        """Auto-scroll so the item at the given index stays in view."""
+        y_top = self.padding + index * (self.item_height + self.padding)
+        y_bottom = y_top + self.item_height
+        visible_h = self.height - self.header_height
+        if y_top - self.scroll_offset < 0:
+            self.scroll_offset = y_top
+        elif y_bottom - self.scroll_offset > visible_h:
+            self.scroll_offset = y_bottom - visible_h
+
     def handle_event(self, event):
-        """Handle touch events. Returns the label of a selected item, or None.
+        """Handle touch and encoder events. Returns the label of a selected item, or None.
 
         Touch logic:
         - On touch down: record the start position and highlight the tapped item
         - On touch move: if the finger moves more than 10px, treat it as a scroll
         - On touch up: if we didn't scroll, treat it as a tap and return the selected item
+
+        Encoder logic:
+        - ENC1 rotate: move selection up/down through items
+        - ENC1 click: confirm current selection
+        - ENC2 click: go back to idle
         """
+        if event.type == ENC1_ROTATE:
+            if self.selected is None:
+                self.selected = 0
+            else:
+                self.selected = max(0, min(len(self.items) - 1, self.selected + event.delta))
+            self._ensure_visible(self.selected)
+            return None
+
+        if event.type == ENC1_CLICK:
+            if self.selected is not None:
+                return self.items[self.selected]['label']
+            return None
+
+        if event.type == ENC2_CLICK:
+            return "back"
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.touch_start_y = event.pos[1]
             self.scrolling = False

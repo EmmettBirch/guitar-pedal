@@ -1,1 +1,76 @@
-[]
+[
+  {
+    "name": "DEF",
+    "factory": false,
+    "effects": {
+      "Fuzz": {
+        "enabled": true,
+        "gain": 15.0,
+        "threshold": 0.3,
+        "tone": 0.5,
+        "level": 0.6
+      },
+      "Reverb": {
+        "enabled": true,
+        "room_size": 0.55,
+        "damping": 0.4,
+        "mix": 0.3
+      },
+      "Overdrive": {
+        "enabled": true,
+        "gain": 8.0,
+        "tone": 0.6,
+        "level": 0.7
+      },
+      "Delay": {
+        "enabled": true,
+        "delay_ms": 320.0,
+        "feedback": 0.25,
+        "mix": 0.25
+      },
+      "Chorus": {
+        "enabled": true,
+        "rate": 1.5,
+        "depth": 0.005,
+        "mix": 0.5
+      }
+    }
+  },
+  {
+    "name": "FGH",
+    "factory": false,
+    "effects": {
+      "Fuzz": {
+        "enabled": true,
+        "gain": 15.0,
+        "threshold": 0.3,
+        "tone": 0.5,
+        "level": 0.6
+      },
+      "Overdrive": {
+        "enabled": true,
+        "gain": 8.0,
+        "tone": 0.6,
+        "level": 0.7
+      },
+      "Delay": {
+        "enabled": true,
+        "delay_ms": 320.0,
+        "feedback": 0.25,
+        "mix": 0.25
+      },
+      "Chorus": {
+        "enabled": true,
+        "rate": 2.3272727272727276,
+        "depth": 0.010090909090909091,
+        "mix": 0.5
+      },
+      "Reverb": {
+        "enabled": true,
+        "room_size": 0.55,
+        "damping": 0.4,
+        "mix": 0.3
+      }
+    }
+  }
+]

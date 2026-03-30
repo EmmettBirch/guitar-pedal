@@ -4,6 +4,8 @@
 
 import pygame
 
+from hardware.encoders import ENC1_ROTATE, ENC1_CLICK, ENC2_ROTATE, ENC2_CLICK
+
 
 # Parameter registry: maps effect class name to a list of
 # (display_name, attr_name, min_val, max_val, format_str)
@@ -47,6 +49,8 @@ class EffectsScreen:
         self.view = 'list'          # 'list' or 'detail'
         self.selected_index = None  # Index into effect_chain.effects
         self.dragging_param = None  # Index of param being dragged (detail view)
+        self.list_cursor = 0        # Encoder-highlighted row in list view
+        self.selected_param = 0     # Encoder-highlighted param in detail view
 
         # Colors
         self.bg = (5, 5, 15)
@@ -96,6 +100,8 @@ class EffectsScreen:
             rect = pygame.Rect(self.card_gap, y,
                                self.width - self.card_gap * 2, self.card_height)
             pygame.draw.rect(self.screen, self.card_bg, rect, border_radius=6)
+            if i == self.list_cursor:
+                pygame.draw.rect(self.screen, self.blue, rect, 2, border_radius=6)
 
             # Effect name
             name = type(fx).__name__
@@ -113,6 +119,20 @@ class EffectsScreen:
             self.screen.blit(txt, txt.get_rect(center=badge_rect.center))
 
     def _handle_list_event(self, event):
+        if event.type == ENC1_ROTATE:
+            n = len(self.chain.effects)
+            self.list_cursor = max(0, min(n - 1, self.list_cursor + event.delta))
+            return None
+
+        if event.type == ENC1_CLICK:
+            self.selected_index = self.list_cursor
+            self.selected_param = 0
+            self.view = 'detail'
+            return None
+
+        if event.type == ENC2_CLICK:
+            return "back"
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.btn_back.collidepoint(event.pos):
                 return "back"
@@ -124,6 +144,7 @@ class EffectsScreen:
                                    self.width - self.card_gap * 2, self.card_height)
                 if rect.collidepoint(event.pos):
                     self.selected_index = i
+                    self.selected_param = 0
                     self.view = 'detail'
                     return None
         return None
@@ -182,6 +203,11 @@ class EffectsScreen:
             y = self._param_y(i)
             cy = y + self.card_height // 2
 
+            # Highlight selected param row
+            if i == self.selected_param:
+                row_rect = pygame.Rect(0, y, self.width, self.card_height)
+                pygame.draw.rect(self.screen, (30, 30, 55), row_rect)
+
             # Param name
             label = self.small_font.render(display_name, True, self.dim_text)
             self.screen.blit(label, (15, cy - label.get_height() // 2))
@@ -205,9 +231,31 @@ class EffectsScreen:
             val_surf = self.small_font.render(val_str, True, self.text)
             self.screen.blit(val_surf, (self.value_x, cy - val_surf.get_height() // 2))
 
+    def _apply_encoder_step(self, param_index, delta):
+        """Nudge a parameter value by one encoder step (1% of its range)."""
+        fx = self.chain.effects[self.selected_index]
+        params = self._get_params()
+        _, attr, mn, mx, _ = params[param_index]
+        step = (mx - mn) / 100.0
+        val = max(mn, min(mx, getattr(fx, attr) + delta * step))
+        setattr(fx, attr, val)
+
     def _handle_detail_event(self, event):
         fx = self.chain.effects[self.selected_index]
         params = self._get_params()
+
+        if event.type == ENC1_ROTATE:
+            self.selected_param = max(0, min(len(params) - 1, self.selected_param + event.delta))
+            return None
+
+        if event.type == ENC2_ROTATE:
+            self._apply_encoder_step(self.selected_param, event.delta)
+            return None
+
+        if event.type == ENC2_CLICK:
+            self.view = 'list'
+            self.dragging_param = None
+            return None
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.btn_back.collidepoint(event.pos):

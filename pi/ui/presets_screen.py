@@ -6,6 +6,7 @@ import pygame
 import time
 from effects.presets import (get_all_presets, load_user_presets,
                              save_user_presets, snapshot_chain, apply_preset)
+from hardware.encoders import ENC1_ROTATE, ENC1_CLICK, ENC2_CLICK
 
 
 class PresetsScreen:
@@ -49,6 +50,9 @@ class PresetsScreen:
         self.scroll_offset = 0
         self.touch_start_y = None
         self.scrolling = False
+
+        # Encoder cursor (list view: 0..len(presets) where last = save button)
+        self.list_cursor = 0
 
         # Green flash feedback
         self._flash_index = None
@@ -129,6 +133,8 @@ class PresetsScreen:
             else:
                 bg = self.card_bg
             pygame.draw.rect(self.screen, bg, rect, border_radius=6)
+            if i == self.list_cursor:
+                pygame.draw.rect(self.screen, self.blue, rect, 2, border_radius=6)
 
             # Preset name
             label = self.item_font.render(preset["name"], True, self.text)
@@ -150,11 +156,31 @@ class PresetsScreen:
         save_rect = self._save_btn_rect()
         if save_rect.bottom >= self.header_height and save_rect.top <= self.height:
             pygame.draw.rect(self.screen, self.bg, save_rect, border_radius=6)
-            pygame.draw.rect(self.screen, self.green, save_rect, 2, border_radius=6)
+            border_color = self.white if self.list_cursor == len(self.presets) else self.green
+            pygame.draw.rect(self.screen, border_color, save_rect, 2, border_radius=6)
             txt = self.item_font.render("+ SAVE CURRENT", True, self.green)
             self.screen.blit(txt, txt.get_rect(center=save_rect.center))
 
     def _handle_list_event(self, event):
+        if event.type == ENC1_ROTATE:
+            # +1 extra position for the save button at the end
+            self.list_cursor = max(0, min(len(self.presets), self.list_cursor + event.delta))
+            return None
+
+        if event.type == ENC1_CLICK:
+            if self.list_cursor < len(self.presets):
+                apply_preset(self.chain, self.presets[self.list_cursor])
+                self._flash_index = self.list_cursor
+                self._flash_time = 0.6
+            else:
+                self._name_text = ""
+                self._cursor_blink = 0
+                self.view = 'naming'
+            return None
+
+        if event.type == ENC2_CLICK:
+            return "back"
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.btn_back.collidepoint(event.pos):
                 return "back"
